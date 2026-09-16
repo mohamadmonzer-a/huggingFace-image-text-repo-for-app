@@ -8,26 +8,36 @@ jobs:
   download-and-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Required to create a release and upload assets
+      contents: write   # Required to create a release and upload assets
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.10'
 
       - name: Install gdown
-        run: pip install gdown
+        run: pip install --upgrade gdown
 
       - name: Download file from Google Drive
         # Using a secret for the File ID is a best practice
-        run: gdown "${{ secrets.GOOGLE_DRIVE_FILE_ID }}" -O katib_bundle.zip
+        run: |
+          gdown "${{ secrets.GOOGLE_DRIVE_FILE_ID }}" \
+            -O katib_bundle.zip \
+            --fuzzy
 
-      - name: Verify file exists
-        run: ls -lh katib_bundle.zip
+      - name: Verify file exists and show size
+        run: |
+          ls -lh katib_bundle.zip
+          echo "Size in bytes: $(stat -c%s katib_bundle.zip)"
+          # Fail fast if the file is suspiciously small (likely an HTML error page)
+          if [ "$(stat -c%s katib_bundle.zip)" -lt 1000000 ]; then
+            echo "::error::Downloaded file is too small — gdown likely failed or Drive returned an error page."
+            exit 1
+          fi
 
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v2
