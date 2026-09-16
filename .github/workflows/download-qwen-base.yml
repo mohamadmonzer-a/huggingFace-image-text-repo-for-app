@@ -24,8 +24,7 @@ jobs:
       - name: Download Qwen base zip from Google Drive
         run: |
           gdown "1FZjFC_30z6oSEdSpxshNjbXqaVF8pGgD" \
-            -O Qwen3.5-0.8B-base.zip \
-            --fuzzy
+            -O Qwen3.5-0.8B-base.zip
 
       - name: Verify file exists and show size
         run: |
