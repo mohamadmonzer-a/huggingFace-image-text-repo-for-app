@@ -1,0 +1,46 @@
+name: Download Qwen Base from Drive & Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  download-qwen-base:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+
+      - name: Install gdown
+        run: pip install --upgrade gdown
+
+      - name: Download Qwen base zip from Google Drive
+        run: |
+          gdown "1FZjFC_30z6oSEdSpxshNjbXqaVF8pGgD" \
+            -O Qwen3.5-0.8B-base.zip \
+            --fuzzy
+
+      - name: Verify file exists and show size
+        run: |
+          ls -lh Qwen3.5-0.8B-base.zip
+          echo "Size in bytes: $(stat -c%s Qwen3.5-0.8B-base.zip)"
+          if [ "$(stat -c%s Qwen3.5-0.8B-base.zip)" -lt 1000000 ]; then
+            echo "::error::Downloaded file is too small — gdown likely failed or Drive returned an error page."
+            exit 1
+          fi
+
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: qwen-base-${{ github.run_number }}
+          name: "Qwen Base Bundle #${{ github.run_number }}"
+          files: Qwen3.5-0.8B-base.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
